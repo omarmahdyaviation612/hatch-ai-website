@@ -35,7 +35,7 @@ export const WHATSAPP_DISPLAY = "+20 110 119 0931";
 // contact form. Override with CONTACT_RECEIVER_EMAIL in your env
 // vars — see README "Configure the inbox" section.
 export const CONTACT_RECEIVER_EMAIL =
-  process.env.CONTACT_RECEIVER_EMAIL || "hello@hatch.ai";
+  process.env.CONTACT_RECEIVER_EMAIL || "info@HatchAi.net";
 
 export const CONTACT_DISPLAY_EMAIL = CONTACT_RECEIVER_EMAIL;
 
