@@ -1,0 +1,13 @@
+{
+  "name": "HATCH.AI — Creative and AI Solutions Agency",
+  "short_name": "HATCH.AI",
+  "description": "Ideas hatch. Solutions scale. Creative marketing + AI-powered product development for startups.",
+  "icons": [
+    { "src": "/icon.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/apple-icon.png", "sizes": "180x180", "type": "image/png" }
+  ],
+  "theme_color": "#08080a",
+  "background_color": "#08080a",
+  "display": "standalone",
+  "start_url": "/"
+}
