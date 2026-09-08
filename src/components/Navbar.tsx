@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Container, PrimaryButton } from "./ui";
 import { NAV_LINKS } from "@/lib/site-config";
 
-export default function Navbar() {
+export default function Navbar({ homePath = "" }: { homePath?: string }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -33,7 +33,7 @@ export default function Navbar() {
       }`}
     >
       <Container className="flex h-[72px] items-center justify-between">
-        <Link href="#top" className="flex items-center gap-2.5" aria-label="Hatch.ai home">
+        <Link href={`${homePath}#top`} className="flex items-center gap-2.5" aria-label="Hatch.ai home">
           <Image
             src="/icon.png"
             alt=""
@@ -51,7 +51,7 @@ export default function Navbar() {
           {NAV_LINKS.map((link) => (
             <Link
               key={link.href}
-              href={link.href}
+              href={`${homePath}${link.href}`}
               className="font-body text-[14.5px] font-medium text-muted transition-colors hover:text-paper"
             >
               {link.label}
@@ -60,7 +60,7 @@ export default function Navbar() {
         </nav>
 
         <div className="hidden lg:block">
-          <PrimaryButton href="#contact" className="!py-3 !px-5 !text-[14px]">
+          <PrimaryButton href={`${homePath}#contact`} className="!py-3 !px-5 !text-[14px]">
             Start a Project
           </PrimaryButton>
         </div>
@@ -98,14 +98,14 @@ export default function Navbar() {
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
-                href={link.href}
+                href={`${homePath}${link.href}`}
                 onClick={() => setOpen(false)}
                 className="rounded-lg px-3 py-3 font-body text-[16px] font-medium text-paper/90 transition-colors hover:bg-panel"
               >
                 {link.label}
               </Link>
             ))}
-            <PrimaryButton href="#contact" className="mt-2 w-full">
+            <PrimaryButton href={`${homePath}#contact`} className="mt-2 w-full">
               Start a Project
             </PrimaryButton>
           </Container>
