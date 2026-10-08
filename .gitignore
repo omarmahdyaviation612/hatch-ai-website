@@ -2,6 +2,10 @@
 
 # dependencies
 /node_modules
+/dashboard-server/node_modules
+
+# dashboard secrets (keep .env.example, ignore .env)
+/dashboard-server/.env
 /.pnp
 .pnp.*
 .yarn/*

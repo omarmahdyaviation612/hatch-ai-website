@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Marketing Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d2e;
+      --surface2: #252840;
+      --accent: #6C63FF;
+      --accent2: #4ECDC4;
+      --text: #e8eaf6;
+      --muted: #8892b0;
+      --border: #2d3154;
+      --success: #4CAF50;
+      --warning: #FFC107;
+      --danger: #FF5252;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar {
+      width: 240px; background: var(--surface); padding: 20px 0;
+      display: flex; flex-direction: column; border-right: 1px solid var(--border);
+      position: fixed; height: 100vh; z-index: 100;
+    }
+    .logo { padding: 0 20px 24px; font-size: 20px; font-weight: 700; color: var(--accent); display: flex; align-items: center; gap: 10px; }
+    .logo i { font-size: 24px; }
+    .nav-item {
+      padding: 12px 20px; cursor: pointer; display: flex; align-items: center;
+      gap: 12px; color: var(--muted); transition: all 0.2s; font-size: 14px;
+    }
+    .nav-item:hover, .nav-item.active { background: var(--surface2); color: var(--text); border-left: 3px solid var(--accent); }
+    .nav-item i { width: 20px; text-align: center; }
+    .nav-section { padding: 16px 20px 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+
+    /* Main */
+    .main { margin-left: 240px; flex: 1; padding: 24px; overflow-y: auto; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .header h1 { font-size: 22px; font-weight: 600; }
+    .page-badge { background: var(--accent); color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; }
+
+    /* Cards */
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .card { background: var(--surface); border-radius: 12px; padding: 20px; border: 1px solid var(--border); }
+    .card-title { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .card-value { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+    .card-change { font-size: 12px; color: var(--success); }
+    .card-icon { float: right; font-size: 32px; opacity: 0.3; margin-top: -40px; }
+
+    /* Page Selector */
+    .page-selector { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
+    .page-btn {
+      padding: 8px 16px; border-radius: 20px; border: 2px solid var(--border);
+      background: var(--surface); color: var(--muted); cursor: pointer;
+      font-size: 13px; transition: all 0.2s; display: flex; align-items: center; gap: 8px;
+    }
+    .page-btn.active { color: white; border-color: currentColor; }
+    .page-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+    /* Sections */
+    .section { display: none; }
+    .section.active { display: block; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .panel { background: var(--surface); border-radius: 12px; padding: 20px; border: 1px solid var(--border); }
+    .panel h3 { font-size: 14px; color: var(--muted); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+    /* Form */
+    textarea, input, select {
+      width: 100%; background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text); padding: 10px 14px; border-radius: 8px; font-size: 14px;
+      outline: none; font-family: inherit; transition: border 0.2s;
+    }
+    textarea:focus, input:focus, select:focus { border-color: var(--accent); }
+    textarea { resize: vertical; min-height: 120px; }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+    .btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-primary:hover { background: #5a52e8; }
+    .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-success { background: var(--success); color: white; }
+    .btn-danger { background: var(--danger); color: white; font-size: 12px; padding: 6px 12px; }
+    .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    /* Checkboxes */
+    .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; }
+    .checkbox-label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; padding: 6px 12px; background: var(--surface2); border-radius: 6px; border: 1px solid var(--border); transition: all 0.2s; }
+    .checkbox-label:hover { border-color: var(--accent); }
+    .checkbox-label input { width: auto; }
+
+    /* Posts List */
+    .post-item { border-bottom: 1px solid var(--border); padding: 14px 0; }
+    .post-item:last-child { border-bottom: none; }
+    .post-meta { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+    .post-message { font-size: 14px; margin-bottom: 8px; }
+    .post-stats { display: flex; gap: 16px; font-size: 12px; color: var(--muted); }
+    .post-stats span { display: flex; align-items: center; gap: 4px; }
+
+    /* Scheduled Posts */
+    .scheduled-item { background: var(--surface2); border-radius: 8px; padding: 14px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-start; }
+    .scheduled-info { flex: 1; }
+    .scheduled-time { font-size: 12px; color: var(--warning); margin-top: 4px; }
+    .scheduled-pages { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+    .tag { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); }
+
+    /* Status */
+    .status { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 4px 10px; border-radius: 10px; }
+    .status.success { background: rgba(76,175,80,0.15); color: var(--success); }
+    .status.warning { background: rgba(255,193,7,0.15); color: var(--warning); }
+    .status.danger { background: rgba(255,82,82,0.15); color: var(--danger); }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface2); color: var(--text); padding: 14px 20px; border-radius: 10px; border-left: 4px solid var(--accent); font-size: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); transform: translateX(120%); transition: transform 0.3s; z-index: 1000; }
+    .toast.show { transform: translateX(0); }
+    .toast.success { border-color: var(--success); }
+    .toast.error { border-color: var(--danger); }
+
+    /* AI Captions */
+    .caption-suggestion { background: var(--surface2); border-radius: 8px; padding: 14px; margin-bottom: 10px; cursor: pointer; border: 1px solid var(--border); transition: all 0.2s; }
+    .caption-suggestion:hover { border-color: var(--accent); }
+    .caption-suggestion p { font-size: 14px; }
+    .caption-suggestion small { color: var(--muted); font-size: 11px; }
+
+    /* Page Overview Cards */
+    .pages-overview { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .page-card { background: var(--surface); border-radius: 12px; padding: 20px; border: 1px solid var(--border); border-top: 4px solid; cursor: pointer; transition: all 0.2s; }
+    .page-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+    .page-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .page-card-name { font-weight: 600; font-size: 16px; }
+    .page-card-cat { font-size: 12px; color: var(--muted); }
+    .page-card-stats { display: flex; gap: 20px; }
+    .page-stat { text-align: center; }
+    .page-stat-val { font-size: 20px; font-weight: 700; }
+    .page-stat-label { font-size: 11px; color: var(--muted); }
+
+    /* Loading */
+    .loading { display: flex; align-items: center; justify-content: center; padding: 40px; color: var(--muted); gap: 10px; }
+    .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    @media (max-width: 768px) {
+      .sidebar { width: 60px; }
+      .sidebar .nav-item span, .sidebar .logo span, .nav-section { display: none; }
+      .main { margin-left: 60px; }
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="logo"><i class="fas fa-rocket"></i><span>Hatch.Ai</span></div>
+  <div id="user-info" style="padding:0 20px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);margin-bottom:8px">
+    <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#4ECDC4,#6C63FF);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700">O</div>
+    <div style="flex:1;min-width:0"><div id="username-display" style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Loading...</div><div style="font-size:11px;color:var(--muted)">Admin</div></div>
+    <a href="/logout" title="Logout" style="color:var(--muted);font-size:14px;text-decoration:none;transition:color 0.2s" onmouseover="this.style.color='#FF5252'" onmouseout="this.style.color='var(--muted)'"><i class="fas fa-sign-out-alt"></i></a>
+  </div>
+  <div class="nav-section">Main</div>
+  <div class="nav-item active" onclick="showSection('overview')"><i class="fas fa-chart-pie"></i><span>Overview</span></div>
+  <div class="nav-item" onclick="showSection('publish')"><i class="fas fa-paper-plane"></i><span>Publish</span></div>
+  <div class="nav-item" onclick="showSection('schedule')"><i class="fas fa-calendar-alt"></i><span>Schedule</span></div>
+  <div class="nav-item" onclick="showSection('analytics')"><i class="fas fa-chart-line"></i><span>Analytics</span></div>
+  <div class="nav-item" onclick="showSection('posts')"><i class="fas fa-list"></i><span>Posts</span></div>
+  <div class="nav-section">Tools</div>
+  <div class="nav-item" onclick="showSection('ai')"><i class="fas fa-magic"></i><span>AI Captions</span></div>
+  <div class="nav-item" onclick="showSection('comments')"><i class="fas fa-comments"></i><span>Comments</span></div>
+</aside>
+
+<!-- Main Content -->
+<main class="main">
+
+  <!-- OVERVIEW -->
+  <section id="overview" class="section active">
+    <div class="header"><h1>📊 Pages Overview</h1><span class="page-badge" id="pages-count">Loading...</span></div>
+    <div class="pages-overview" id="pages-overview-grid">
+      <div class="loading"><div class="spinner"></div> Loading pages...</div>
+    </div>
+    <div class="grid-2">
+      <div class="panel">
+        <h3><i class="fas fa-chart-bar"></i> Total Followers by Page</h3>
+        <canvas id="followersChart" height="200"></canvas>
+      </div>
+      <div class="panel">
+        <h3><i class="fas fa-fire"></i> Engagement Overview</h3>
+        <canvas id="engagementChart" height="200"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- PUBLISH -->
+  <section id="publish" class="section">
+    <div class="header"><h1>📢 Publish Post</h1></div>
+    <div class="grid-2">
+      <div class="panel">
+        <h3><i class="fas fa-edit"></i> Create Post</h3>
+        <div class="form-group">
+          <label>Select Pages to Post To</label>
+          <div class="checkbox-group" id="publish-page-checkboxes"></div>
+        </div>
+        <div class="form-group">
+          <label>Message</label>
+          <textarea id="publish-message" placeholder="Write your post content here..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Image URL (optional)</label>
+          <input type="url" id="publish-image" placeholder="https://example.com/image.jpg"/>
+        </div>
+        <div class="form-group">
+          <label>Link (optional)</label>
+          <input type="url" id="publish-link" placeholder="https://example.com"/>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-primary" onclick="publishNow()"><i class="fas fa-paper-plane"></i> Publish Now</button>
+          <button class="btn btn-secondary" onclick="showSection('schedule')"><i class="fas fa-clock"></i> Schedule Instead</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h3><i class="fas fa-eye"></i> Preview</h3>
+        <div id="post-preview" style="background:var(--surface2);border-radius:8px;padding:16px;min-height:200px;">
+          <p style="color:var(--muted);font-size:13px;">Your post preview will appear here as you type...</p>
+        </div>
+        <div style="margin-top:16px;">
+          <h3><i class="fas fa-magic"></i> Quick AI Suggestion</h3>
+          <div style="margin-top:12px;">
+            <input type="text" id="quick-topic" placeholder="Topic (e.g. new product launch)"/>
+            <div style="margin-top:8px;">
+              <select id="quick-tone">
+                <option value="professional">Professional</option>
+                <option value="casual">Casual</option>
+                <option value="promotional">Promotional</option>
+              </select>
+            </div>
+            <button class="btn btn-secondary" style="margin-top:10px;width:100%;" onclick="quickAI()"><i class="fas fa-wand-magic-sparkles"></i> Generate Caption</button>
+            <div id="quick-ai-result" style="margin-top:12px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCHEDULE -->
+  <section id="schedule" class="section">
+    <div class="header"><h1>📅 Schedule Posts</h1></div>
+    <div class="grid-2">
+      <div class="panel">
+        <h3><i class="fas fa-plus-circle"></i> Schedule a Post</h3>
+        <div class="form-group">
+          <label>Select Pages</label>
+          <div class="checkbox-group" id="schedule-page-checkboxes"></div>
+        </div>
+        <div class="form-group">
+          <label>Message</label>
+          <textarea id="schedule-message" placeholder="Write your post content..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Image URL (optional)</label>
+          <input type="url" id="schedule-image" placeholder="https://example.com/image.jpg"/>
+        </div>
+        <div class="form-group">
+          <label>Schedule Date & Time</label>
+          <input type="datetime-local" id="schedule-time"/>
+        </div>
+        <button class="btn btn-primary" onclick="schedulePost()"><i class="fas fa-calendar-check"></i> Schedule Post</button>
+      </div>
+      <div class="panel">
+        <h3><i class="fas fa-clock"></i> Scheduled Posts</h3>
+        <div id="scheduled-list">
+          <div class="loading"><div class="spinner"></div> Loading...</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ANALYTICS -->
+  <section id="analytics" class="section">
+    <div class="header"><h1>📈 Analytics</h1></div>
+    <div class="form-group" style="max-width:300px;margin-bottom:20px;">
+      <label>Select Page</label>
+      <select id="analytics-page-select" onchange="loadAnalytics()"></select>
+    </div>
+    <div class="cards-grid" id="analytics-cards">
+      <div class="loading"><div class="spinner"></div> Select a page to view analytics</div>
+    </div>
+    <div class="panel" style="margin-top:20px;">
+      <h3><i class="fas fa-chart-area"></i> Insights Data</h3>
+      <div id="analytics-insights">
+        <p style="color:var(--muted);font-size:13px;">Select a page above to view insights.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- POSTS -->
+  <section id="posts" class="section">
+    <div class="header"><h1>📝 Recent Posts</h1></div>
+    <div class="form-group" style="max-width:300px;margin-bottom:20px;">
+      <label>Select Page</label>
+      <select id="posts-page-select" onchange="loadPosts()"></select>
+    </div>
+    <div class="panel">
+      <div id="posts-list">
+        <div class="loading"><div class="spinner"></div> Select a page to view posts</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI CAPTIONS -->
+  <section id="ai" class="section">
+    <div class="header"><h1>🤖 AI Caption Generator</h1></div>
+    <div class="grid-2">
+      <div class="panel">
+        <h3><i class="fas fa-sliders"></i> Caption Settings</h3>
+        <div class="form-group">
+          <label>Page</label>
+          <select id="ai-page-select"></select>
+        </div>
+        <div class="form-group">
+          <label>Topic / Product</label>
+          <input type="text" id="ai-topic" placeholder="e.g. Summer sale, new menu, travel packages..."/>
+        </div>
+        <div class="form-group">
+          <label>Tone</label>
+          <select id="ai-tone">
+            <option value="professional">🎩 Professional</option>
+            <option value="casual">😊 Casual & Fun</option>
+            <option value="promotional">🔥 Promotional</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="generateCaptions()"><i class="fas fa-wand-magic-sparkles"></i> Generate Captions</button>
+      </div>
+      <div class="panel">
+        <h3><i class="fas fa-list-check"></i> Suggestions</h3>
+        <div id="ai-suggestions">
+          <p style="color:var(--muted);font-size:13px;">Generated captions will appear here. Click one to copy it!</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMMENTS -->
+  <section id="comments" class="section">
+    <div class="header"><h1>💬 Comments Monitor</h1></div>
+    <div class="form-group" style="max-width:300px;margin-bottom:20px;">
+      <label>Select Page</label>
+      <select id="comments-page-select" onchange="loadPostsForComments()"></select>
+    </div>
+    <div class="grid-2">
+      <div class="panel">
+        <h3><i class="fas fa-newspaper"></i> Select a Post</h3>
+        <div id="comments-posts-list">
+          <p style="color:var(--muted);font-size:13px;">Select a page to view posts.</p>
+        </div>
+      </div>
+      <div class="panel">
+        <h3><i class="fas fa-comments"></i> Comments</h3>
+        <div id="comments-list">
+          <p style="color:var(--muted);font-size:13px;">Select a post to view comments.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+let pages = [];
+let followersChart, engagementChart;
+
+// ─── Init ───
+async function init() {
+  // Load current user
+  try {
+    const me = await fetch(`${API}/api/me`).then(r => r.json());
+    const el = document.getElementById('username-display');
+    if (el) el.textContent = me.username || 'Admin';
+  } catch(e) {}
+
+  pages = await fetch(`${API}/api/pages`).then(r => r.json());
+  buildPageSelectors();
+  loadOverview();
+  updatePreview();
+  loadScheduled();
+}
+
+function buildPageSelectors() {
+  // Checkboxes for publish/schedule
+  ['publish', 'schedule'].forEach(prefix => {
+    const container = document.getElementById(`${prefix}-page-checkboxes`);
+    if (!container) return;
+    container.innerHTML = pages.map(p => `
+      <label class="checkbox-label">
+        <input type="checkbox" name="${prefix}-page" value="${p.key}" checked/>
+        <span class="page-dot" style="background:${p.color}"></span>
+        ${p.name}
+      </label>`).join('');
+  });
+
+  // Selects
+  ['analytics-page-select','posts-page-select','ai-page-select','comments-page-select'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = pages.map(p => `<option value="${p.key}">${p.name}</option>`).join('');
+  });
+
+  document.getElementById('pages-count').textContent = `${pages.length} Pages`;
+}
+
+// ─── Overview ───
+async function loadOverview() {
+  const res = await fetch(`${API}/api/summary`);
+  const summaries = await res.json();
+
+  const grid = document.getElementById('pages-overview-grid');
+  grid.innerHTML = summaries.map(s => `
+    <div class="page-card" style="border-top-color:${pages.find(p=>p.key===s.key)?.color||'#6C63FF'}" onclick="showSection('analytics');document.getElementById('analytics-page-select').value='${s.key}';loadAnalytics()">
+      <div class="page-card-header">
+        <div>
+          <div class="page-card-name">${s.name || s.key}</div>
+          <div class="page-card-cat">${s.category || ''}</div>
+        </div>
+        <i class="fab fa-facebook" style="font-size:24px;color:${pages.find(p=>p.key===s.key)?.color||'#6C63FF'}"></i>
+      </div>
+      ${s.error ? `<span class="status danger"><i class="fas fa-exclamation-circle"></i> ${s.error}</span>` : `
+      <div class="page-card-stats">
+        <div class="page-stat">
+          <div class="page-stat-val">${fmt(s.fan_count||0)}</div>
+          <div class="page-stat-label">Followers</div>
+        </div>
+        <div class="page-stat">
+          <div class="page-stat-val">${fmt(s.followers_count||0)}</div>
+          <div class="page-stat-label">Fans</div>
+        </div>
+        <div class="page-stat">
+          <div class="page-stat-val">${fmt(s.talking_about_count||0)}</div>
+          <div class="page-stat-label">Talking</div>
+        </div>
+      </div>`}
+    </div>`).join('');
+
+  // Charts
+  const labels = summaries.map(s => s.name || s.key);
+  const followers = summaries.map(s => s.fan_count || 0);
+  const talking = summaries.map(s => s.talking_about_count || 0);
+  const colors = summaries.map(s => pages.find(p=>p.key===s.key)?.color || '#6C63FF');
+
+  if (followersChart) followersChart.destroy();
+  followersChart = new Chart(document.getElementById('followersChart'), {
+    type: 'bar',
+    data: { labels, datasets: [{ data: followers, backgroundColor: colors, borderRadius: 6 }] },
+    options: { plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#8892b0' }, grid: { color: '#2d3154' } }, y: { ticks: { color: '#8892b0' }, grid: { color: '#2d3154' } } } }
+  });
+
+  if (engagementChart) engagementChart.destroy();
+  engagementChart = new Chart(document.getElementById('engagementChart'), {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data: talking, backgroundColor: colors }] },
+    options: { plugins: { legend: { labels: { color: '#e8eaf6', font: { size: 11 } } } } }
+  });
+}
+
+// ─── Analytics ───
+async function loadAnalytics() {
+  const pageKey = document.getElementById('analytics-page-select').value;
+  document.getElementById('analytics-cards').innerHTML = '<div class="loading"><div class="spinner"></div> Loading...</div>';
+  document.getElementById('analytics-insights').innerHTML = '<div class="loading"><div class="spinner"></div> Loading...</div>';
+
+  try {
+    const data = await fetch(`${API}/api/analytics/${pageKey}`).then(r => r.json());
+    if (data.error) {
+      document.getElementById('analytics-cards').innerHTML = `<div class="status danger"><i class="fas fa-exclamation-circle"></i> ${data.error}</div>`;
+      return;
+    }
+
+    // Cards from posts
+    const posts = data.posts || [];
+    const totalLikes = posts.reduce((s, p) => s + (p.likes?.summary?.total_count || 0), 0);
+    const totalComments = posts.reduce((s, p) => s + (p.comments?.summary?.total_count || 0), 0);
+    const totalShares = posts.reduce((s, p) => s + (p.shares?.count || 0), 0);
+
+    document.getElementById('analytics-cards').innerHTML = `
+      <div class="card"><div class="card-title">Recent Posts</div><div class="card-value">${posts.length}</div><i class="fas fa-newspaper card-icon"></i></div>
+      <div class="card"><div class="card-title">Total Likes</div><div class="card-value">${fmt(totalLikes)}</div><i class="fas fa-heart card-icon"></i></div>
+      <div class="card"><div class="card-title">Total Comments</div><div class="card-value">${fmt(totalComments)}</div><i class="fas fa-comment card-icon"></i></div>
+      <div class="card"><div class="card-title">Total Shares</div><div class="card-value">${fmt(totalShares)}</div><i class="fas fa-share card-icon"></i></div>`;
+
+    // Insights
+    const insights = data.insights || [];
+    document.getElementById('analytics-insights').innerHTML = insights.length ? `
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+      ${insights.map(i => `
+        <div style="background:var(--surface2);border-radius:8px;padding:14px">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:4px">${i.name?.replace(/_/g,' ').toUpperCase()}</div>
+          <div style="font-size:20px;font-weight:700">${i.values?.[0]?.value || 0}</div>
+          <div style="font-size:11px;color:var(--muted)">${i.period}</div>
+        </div>`).join('')}
+      </div>` : '<p style="color:var(--muted)">No insights available for this page yet.</p>';
+  } catch(e) {
+    document.getElementById('analytics-cards').innerHTML = `<div class="status danger">${e.message}</div>`;
+  }
+}
+
+// ─── Posts ───
+async function loadPosts() {
+  const pageKey = document.getElementById('posts-page-select').value;
+  document.getElementById('posts-list').innerHTML = '<div class="loading"><div class="spinner"></div> Loading posts...</div>';
+
+  try {
+    const data = await fetch(`${API}/api/posts/${pageKey}`).then(r => r.json());
+    if (data.error) { document.getElementById('posts-list').innerHTML = `<div class="status danger">${data.error}</div>`; return; }
+
+    const posts = data.data || [];
+    document.getElementById('posts-list').innerHTML = posts.length ? posts.map(p => `
+      <div class="post-item">
+        <div class="post-meta"><i class="fas fa-clock"></i> ${new Date(p.created_time).toLocaleString()}</div>
+        ${p.full_picture ? `<img src="${p.full_picture}" style="max-width:100%;border-radius:8px;margin-bottom:8px;max-height:200px;object-fit:cover"/>` : ''}
+        <div class="post-message">${p.message || p.story || '<em style="color:var(--muted)">No text</em>'}</div>
+        <div class="post-stats">
+          <span><i class="fas fa-heart"></i> ${p.likes?.summary?.total_count || 0}</span>
+          <span><i class="fas fa-comment"></i> ${p.comments?.summary?.total_count || 0}</span>
+          <span><i class="fas fa-share"></i> ${p.shares?.count || 0}</span>
+        </div>
+      </div>`).join('') : '<p style="color:var(--muted)">No posts found.</p>';
+  } catch(e) {
+    document.getElementById('posts-list').innerHTML = `<div class="status danger">${e.message}</div>`;
+  }
+}
+
+// ─── Publish ───
+async function publishNow() {
+  const selectedPages = [...document.querySelectorAll('input[name="publish-page"]:checked')].map(el => el.value);
+  const message = document.getElementById('publish-message').value;
+  const imageUrl = document.getElementById('publish-image').value;
+  const link = document.getElementById('publish-link').value;
+
+  if (!selectedPages.length) return showToast('Please select at least one page', 'error');
+  if (!message) return showToast('Please enter a message', 'error');
+
+  showToast('Publishing...', '');
+  try {
+    const res = await fetch(`${API}/api/publish/multi`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pageKeys: selectedPages, message, imageUrl, link })
+    });
+    const data = await res.json();
+    const successes = data.results.filter(r => r.success).length;
+    const failures = data.results.filter(r => r.error).length;
+    showToast(`✅ Published to ${successes} page(s)${failures ? ` | ❌ Failed: ${failures}` : ''}`, successes ? 'success' : 'error');
+    if (successes) { document.getElementById('publish-message').value = ''; document.getElementById('publish-image').value = ''; document.getElementById('publish-link').value = ''; }
+  } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+// ─── Schedule ───
+async function schedulePost() {
+  const selectedPages = [...document.querySelectorAll('input[name="schedule-page"]:checked')].map(el => el.value);
+  const message = document.getElementById('schedule-message').value;
+  const imageUrl = document.getElementById('schedule-image').value;
+  const scheduledTime = document.getElementById('schedule-time').value;
+
+  if (!selectedPages.length) return showToast('Select at least one page', 'error');
+  if (!message) return showToast('Enter a message', 'error');
+  if (!scheduledTime) return showToast('Select a date and time', 'error');
+
+  const res = await fetch(`${API}/api/schedule`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ pageKeys: selectedPages, message, imageUrl, scheduledTime })
+  });
+  const data = await res.json();
+  if (data.success) { showToast('✅ Post scheduled!', 'success'); loadScheduled(); document.getElementById('schedule-message').value = ''; }
+}
+
+async function loadScheduled() {
+  const data = await fetch(`${API}/api/schedule`).then(r => r.json());
+  const container = document.getElementById('scheduled-list');
+  if (!data.length) { container.innerHTML = '<p style="color:var(--muted);font-size:13px">No scheduled posts yet.</p>'; return; }
+  container.innerHTML = data.map(p => `
+    <div class="scheduled-item">
+      <div class="scheduled-info">
+        <div style="font-size:14px">${p.message.substring(0,80)}${p.message.length>80?'...':''}</div>
+        <div class="scheduled-time"><i class="fas fa-clock"></i> ${new Date(p.scheduledTime).toLocaleString()}</div>
+        <div class="scheduled-pages">${(p.pageKeys||[]).map(k => `<span class="tag">${pages.find(pg=>pg.key===k)?.name||k}</span>`).join('')}</div>
+      </div>
+      <button class="btn btn-danger" onclick="deleteScheduled('${p.id}')"><i class="fas fa-trash"></i></button>
+    </div>`).join('');
+}
+
+async function deleteScheduled(id) {
+  await fetch(`${API}/api/schedule/${id}`, { method: 'DELETE' });
+  showToast('Deleted', 'success');
+  loadScheduled();
+}
+
+// ─── AI Captions ───
+async function generateCaptions() {
+  const pageKey = document.getElementById('ai-page-select').value;
+  const topic = document.getElementById('ai-topic').value;
+  const tone = document.getElementById('ai-tone').value;
+  if (!topic) return showToast('Enter a topic', 'error');
+
+  document.getElementById('ai-suggestions').innerHTML = '<div class="loading"><div class="spinner"></div> Generating...</div>';
+  const res = await fetch(`${API}/api/ai/caption`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ pageKey, topic, tone })
+  });
+  const data = await res.json();
+  document.getElementById('ai-suggestions').innerHTML = data.suggestions.map(s => `
+    <div class="caption-suggestion" onclick="copyCaption('${s.caption.replace(/'/g,"\\'")}')">
+      <p>${s.caption}</p>
+      <small><i class="fas fa-copy"></i> Click to copy</small>
+    </div>`).join('');
+}
+
+async function quickAI() {
+  const topic = document.getElementById('quick-topic').value;
+  const tone = document.getElementById('quick-tone').value;
+  if (!topic) return;
+  const res = await fetch(`${API}/api/ai/caption`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ topic, tone })
+  });
+  const data = await res.json();
+  const caption = data.suggestions[0]?.caption || '';
+  document.getElementById('quick-ai-result').innerHTML = caption ? `
+    <div class="caption-suggestion" onclick="useCaption('${caption.replace(/'/g,"\\'")}')">
+      <p>${caption}</p><small><i class="fas fa-arrow-up"></i> Click to use in post</small>
+    </div>` : '';
+}
+
+function copyCaption(text) {
+  navigator.clipboard.writeText(text);
+  showToast('📋 Caption copied!', 'success');
+}
+
+function useCaption(text) {
+  document.getElementById('publish-message').value = text;
+  showSection('publish');
+  showToast('Caption added to post!', 'success');
+}
+
+// ─── Comments ───
+async function loadPostsForComments() {
+  const pageKey = document.getElementById('comments-page-select').value;
+  document.getElementById('comments-posts-list').innerHTML = '<div class="loading"><div class="spinner"></div> Loading...</div>';
+  try {
+    const data = await fetch(`${API}/api/posts/${pageKey}`).then(r => r.json());
+    const posts = data.data || [];
+    document.getElementById('comments-posts-list').innerHTML = posts.map(p => `
+      <div class="post-item" style="cursor:pointer" onclick="loadComments('${p.id}','${pageKey}')">
+        <div class="post-meta">${new Date(p.created_time).toLocaleDateString()}</div>
+        <div class="post-message">${(p.message||p.story||'No text').substring(0,80)}</div>
+        <div class="post-stats"><span><i class="fas fa-comment"></i> ${p.comments?.summary?.total_count||0} comments</span></div>
+      </div>`).join('') || '<p style="color:var(--muted)">No posts found.</p>';
+  } catch(e) { document.getElementById('comments-posts-list').innerHTML = `<div class="status danger">${e.message}</div>`; }
+}
+
+async function loadComments(postId, pageKey) {
+  const page = pages.find(p => p.key === pageKey);
+  document.getElementById('comments-list').innerHTML = '<div class="loading"><div class="spinner"></div> Loading comments...</div>';
+  try {
+    const data = await fetch(`${API}/api/comments/${postId}?token=${page?.key}`).then(r => r.json());
+    const comments = data.data || [];
+    document.getElementById('comments-list').innerHTML = comments.length ? comments.map(c => `
+      <div class="post-item">
+        <div class="post-meta"><strong>${c.from?.name||'Unknown'}</strong> · ${new Date(c.created_time).toLocaleString()}</div>
+        <div class="post-message">${c.message}</div>
+        <div class="post-stats"><span><i class="fas fa-heart"></i> ${c.like_count||0}</span></div>
+      </div>`).join('') : '<p style="color:var(--muted)">No comments yet.</p>';
+  } catch(e) { document.getElementById('comments-list').innerHTML = `<div class="status danger">${e.message}</div>`; }
+}
+
+// ─── Helpers ───
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(name)?.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => { if (n.getAttribute('onclick')?.includes(name)) n.classList.add('active'); });
+  if (name === 'schedule') loadScheduled();
+}
+
+function updatePreview() {
+  const msg = document.getElementById('publish-message');
+  const preview = document.getElementById('post-preview');
+  if (msg && preview) {
+    msg.addEventListener('input', () => {
+      preview.innerHTML = msg.value ? `<p style="line-height:1.6">${msg.value.replace(/\n/g,'<br>')}</p>` : '<p style="color:var(--muted);font-size:13px">Your post preview will appear here as you type...</p>';
+    });
+  }
+}
+
+function fmt(n) {
+  if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+  if (n >= 1000) return (n/1000).toFixed(1) + 'K';
+  return n;
+}
+
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.className = 'toast', 3500);
+}
+
+init();
+</script>
+</body>
+</html>
